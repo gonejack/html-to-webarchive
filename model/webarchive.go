@@ -30,12 +30,14 @@ type Resources struct {
 type WebArchive struct {
 	WebMainResources *Resources   `plist:"WebMainResource"`
 	WebSubResources  []*Resources `plist:"WebSubresources"`
+
+	html string `plist:"-"`
 }
 
-func (w *WebArchive) Download(htmlFile string, dir string, verbose bool) (err error) {
-	reader := bytes.NewReader(w.WebMainResources.WebResourceData)
-	doc, err := goquery.NewDocumentFromReader(reader)
+func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(w.WebMainResources.WebResourceData))
 	if err != nil {
+		err = fmt.Errorf("parse html %s fialed: %s", w.WebMainResources.WebResourceData, err)
 		return
 	}
 
@@ -72,7 +74,7 @@ func (w *WebArchive) Download(htmlFile string, dir string, verbose bool) (err er
 			paths = append(paths, localFile)
 			savedFiles[ref] = localFile
 		default:
-			fd, err := w.openLocalFile(htmlFile, ref)
+			fd, err := w.openLocalFile(w.html, ref)
 			if err == nil {
 				_ = fd.Close()
 				savedFiles[ref] = fd.Name()
@@ -153,17 +155,25 @@ func (w *WebArchive) openLocalFile(htmlFile string, ref string) (fd *os.File, er
 	return
 }
 
-func NewWebArchive(html []byte) *WebArchive {
-	w := &WebArchive{
+func NewWebArchive(html string) (warc *WebArchive, err error) {
+	htm, err := ioutil.ReadFile(html)
+	if err != nil {
+		err = fmt.Errorf("open html %s fialed: %s", htm, err)
+		return
+	}
+
+	warc = &WebArchive{
 		WebMainResources: &Resources{
 			WebResourceMIMEType:         "text/html",
 			WebResourceTextEncodingName: "UTF-8",
 			WebResourceURL:              "",
 			WebResourceFrameName:        "",
-			WebResourceData:             html,
+			WebResourceData:             htm,
 		},
+		html: html,
 	}
-	return w
+
+	return
 }
 
 func md5str(s string) string {

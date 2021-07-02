@@ -15,7 +15,7 @@ var (
 
 	prog = &cobra.Command{
 		Use:   "html-to-webarchive *.html",
-		Short: "Command line tool for converting html to safari .webarchive files",
+		Short: "Command line tool for converting html to Safari .webarchive files",
 		Run: func(c *cobra.Command, args []string) {
 			err := run(c, args)
 			if err != nil {

@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -23,7 +22,7 @@ func (h *HTML2WebArchive) Run(htmls []string) (err error) {
 	}
 
 	for _, html := range htmls {
-		log.Printf("processing %s", html)
+		log.Printf("process %s", html)
 
 		err = h.process(html)
 		if err != nil {
@@ -36,25 +35,24 @@ func (h *HTML2WebArchive) Run(htmls []string) (err error) {
 func (h *HTML2WebArchive) process(html string) (err error) {
 	target := strings.TrimSuffix(html, filepath.Ext(html)) + ".webarchive"
 	if s, e := os.Stat(target); e == nil && s.Size() > 0 {
-		log.Printf("%s exist, skipped", target)
+		log.Printf("skipped %s", target)
 		return
 	}
 
-	htm, err := ioutil.ReadFile(html)
+	// new webarchive
+	warc, err := model.NewWebArchive(html)
 	if err != nil {
-		err = fmt.Errorf("open html %s fialed: %s", htm, err)
 		return
 	}
-	wa := model.NewWebArchive(htm)
 
 	// save resources
-	err = wa.Download(html, h.MediaDir, h.Verbose)
+	err = warc.SaveRefs(h.MediaDir, h.Verbose)
 	if err != nil {
 		return
 	}
 
 	// write webarchive
-	err = wa.Write(target)
+	err = warc.Write(target)
 	if err != nil {
 		return
 	}
