@@ -87,9 +87,7 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 		if err != nil {
 			return
 		}
-		getter := get.DefaultGetter()
-		getter.Verbose = verbose
-		eRefs, errs := getter.BatchInOrder(refs, paths, 3, time.Minute*2)
+		eRefs, errs := get.BatchInOrder(refs, paths, 3, time.Minute*2)
 		for i := range eRefs {
 			log.Printf("download %s fail: %s", eRefs[i], errs[i])
 		}
