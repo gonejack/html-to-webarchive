@@ -42,8 +42,8 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 	}
 
 	savedFiles := make(map[string]string)
+	tasks := get.NewDownloadTasks()
 
-	var refs, paths []string
 	doc.Find("img,video,link").Each(func(i int, e *goquery.Selection) {
 		var attr string
 		switch e.Get(0).Data {
@@ -70,8 +70,7 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 				return
 			}
 			localFile := filepath.Join(dir, fmt.Sprintf("%s%s", md5str(ref), filepath.Ext(u.Path)))
-			refs = append(refs, ref)
-			paths = append(paths, localFile)
+			tasks.Add(ref, localFile)
 			savedFiles[ref] = localFile
 		default:
 			fd, err := w.openLocalFile(w.html, ref)
@@ -82,15 +81,14 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 		}
 	})
 
-	if len(refs) > 0 {
+	if len(tasks.List) > 0 {
 		err = os.MkdirAll(dir, 0766)
 		if err != nil {
 			return
 		}
-		eRefs, errs := get.BatchInOrder(refs, paths, 3, time.Minute*2)
-		for i := range eRefs {
-			log.Printf("download %s fail: %s", eRefs[i], errs[i])
-		}
+		get.Batch(tasks, 3, time.Minute*2).ForEach(func(t *get.DownloadTask) {
+			log.Printf("download %s fail: %s", t.Link, t.Err)
+		})
 	}
 
 	for ref, file := range savedFiles {
