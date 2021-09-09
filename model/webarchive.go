@@ -86,9 +86,18 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 		if err != nil {
 			return
 		}
-		get.Batch(tasks, 3, time.Minute*2).ForEach(func(t *get.DownloadTask) {
-			log.Printf("download %s fail: %s", t.Link, t.Err)
-		})
+		g := get.Default()
+		g.OnEachStart = func(t *get.DownloadTask) {
+			if verbose {
+				log.Printf("downloading %s", t.Link)
+			}
+		}
+		g.OnEachStop = func(t *get.DownloadTask) {
+			if t.Err != nil {
+				log.Printf("download %s fail: %s", t.Link, t.Err)
+			}
+		}
+		g.Batch(tasks, 3, time.Minute*2)
 	}
 
 	for ref, file := range savedFiles {
