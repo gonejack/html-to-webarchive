@@ -41,7 +41,7 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 		return
 	}
 
-	savedFiles := make(map[string]string)
+	saved := make(map[string]string)
 	tasks := get.NewDownloadTasks()
 
 	doc.Find("img,video,link").Each(func(i int, e *goquery.Selection) {
@@ -71,12 +71,12 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 			}
 			localFile := filepath.Join(dir, fmt.Sprintf("%s%s", md5str(ref), filepath.Ext(u.Path)))
 			tasks.Add(ref, localFile)
-			savedFiles[ref] = localFile
+			saved[ref] = localFile
 		default:
 			fd, err := w.openLocalFile(w.html, ref)
 			if err == nil {
 				_ = fd.Close()
-				savedFiles[ref] = fd.Name()
+				saved[ref] = fd.Name()
 			}
 		}
 	})
@@ -100,7 +100,7 @@ func (w *WebArchive) SaveRefs(dir string, verbose bool) (err error) {
 		g.Batch(tasks, 3, time.Minute*2)
 	}
 
-	for ref, file := range savedFiles {
+	for ref, file := range saved {
 		err = w.AttachResource(ref, file)
 		if err != nil {
 			log.Printf("cannot attach %s(%s): %s", ref, file, err)
