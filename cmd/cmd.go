@@ -20,12 +20,12 @@ type options struct {
 	HTML []string `arg:"" optional:""`
 }
 
-type HTML2WebArchive struct {
+type HTMLToWarc struct {
 	options
 	MediaDir string
 }
 
-func (h *HTML2WebArchive) Run() (err error) {
+func (h *HTMLToWarc) Run() (err error) {
 	kong.Parse(&h.options,
 		kong.Name("html-to-webarchive"),
 		kong.Description("Command line tool for converting html to Safari .webarchive files."),
@@ -60,10 +60,10 @@ func (h *HTML2WebArchive) Run() (err error) {
 
 	return
 }
-func (h *HTML2WebArchive) process(html string) (err error) {
-	target := strings.TrimSuffix(html, filepath.Ext(html)) + ".webarchive"
-	if s, e := os.Stat(target); e == nil && s.Size() > 0 {
-		log.Printf("skipped %s", target)
+func (h *HTMLToWarc) process(html string) (err error) {
+	output := strings.TrimSuffix(html, filepath.Ext(html)) + ".webarchive"
+	if s, e := os.Stat(output); e == nil && s.Size() > 0 {
+		log.Printf("skipped %s", output)
 		return
 	}
 
@@ -80,13 +80,13 @@ func (h *HTML2WebArchive) process(html string) (err error) {
 	}
 
 	// write webarchive
-	err = warc.Write(target)
+	err = warc.Write(output)
 	if err != nil {
 		return
 	}
 
 	if h.Verbose {
-		log.Printf("saved %s", target)
+		log.Printf("saved %s", output)
 	}
 
 	return

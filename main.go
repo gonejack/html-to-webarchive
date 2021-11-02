@@ -7,11 +7,8 @@ import (
 )
 
 func main() {
-	c := cmd.HTML2WebArchive{
-		MediaDir: "media",
-	}
-	err := c.Run()
-	if err != nil {
-		log.Fatal(err)
+	c := cmd.HTMLToWarc{MediaDir: "media"}
+	if e := c.Run(); e != nil {
+		log.Fatal(e)
 	}
 }
