@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -114,7 +113,7 @@ func (w *WebArchive) AttachResource(ref string, file string) (err error) {
 	if err != nil {
 		return
 	}
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
@@ -161,7 +160,7 @@ func (w *WebArchive) openLocalFile(htmlFile string, ref string) (fd *os.File, er
 }
 
 func NewWebArchive(html string) (warc *WebArchive, err error) {
-	htm, err := ioutil.ReadFile(html)
+	htm, err := os.ReadFile(html)
 	if err != nil {
 		err = fmt.Errorf("open html %s fialed: %s", htm, err)
 		return
