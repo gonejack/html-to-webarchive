@@ -1,4 +1,4 @@
-package cmd
+package htm2war
 
 import (
 	"errors"
@@ -8,47 +8,24 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alecthomas/kong"
-
 	"github.com/gonejack/html-to-webarchive/model"
 )
 
-type options struct {
-	Verbose bool `short:"v" help:"Verbose printing."`
-	About   bool `help:"Show about."`
-
-	HTML []string `arg:"" optional:""`
-}
-
 type HTMLToWarc struct {
-	options
-	MediaDir string
+	Options
 }
 
 func (h *HTMLToWarc) Run() (err error) {
-	kong.Parse(&h.options,
-		kong.Name("html-to-webarchive"),
-		kong.Description("Command line tool for converting html to Safari .webarchive files."),
-		kong.UsageOnError(),
-	)
-
 	if h.About {
 		fmt.Println("Visit https://github.com/gonejack/html-to-webarchive")
 		return
 	}
-
 	if len(h.HTML) == 0 {
-		h.HTML, _ = filepath.Glob("*.html")
+		return errors.New("no .html files found")
 	}
-	if len(h.HTML) == 0 {
-		return errors.New("not .html file found")
-	}
-
-	err = os.MkdirAll(h.MediaDir, 0777)
-	if err != nil {
-		return fmt.Errorf("cannot make dir %s: %s", h.MediaDir, err)
-	}
-
+	return h.run()
+}
+func (h *HTMLToWarc) run() (err error) {
 	for _, html := range h.HTML {
 		log.Printf("process %s", html)
 
@@ -57,7 +34,6 @@ func (h *HTMLToWarc) Run() (err error) {
 			return fmt.Errorf("process %s failed: %s", html, err)
 		}
 	}
-
 	return
 }
 func (h *HTMLToWarc) process(html string) (err error) {
@@ -74,6 +50,7 @@ func (h *HTMLToWarc) process(html string) (err error) {
 	}
 
 	// save resources
+	_ = os.MkdirAll(h.MediaDir, 0766)
 	err = warc.SaveRefs(h.MediaDir, h.Verbose)
 	if err != nil {
 		return

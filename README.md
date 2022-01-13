@@ -1,6 +1,6 @@
 # html-to-webarchive
 
-This command line converts .html files to Safari's .webarchive files.
+This command line converts .html to Safari's .webarchive file.
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/gonejack/html-to-webarchive)
 ![Build](https://github.com/gonejack/html-to-webarchive/actions/workflows/go.yml/badge.svg)
